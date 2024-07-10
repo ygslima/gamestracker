@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../controller/telaController.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -38,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
             Divider(thickness: 10, height: 10, color: Colors.transparent,),
             TextButton(
               onPressed: () {
-                
+                TelaController.loginAuth(context, userController.text, passwController.text);
               },
               child: Text("Login", style: TextStyle(color: Colors.black),),
               style: TextButton.styleFrom(backgroundColor: Colors.green),
