@@ -19,10 +19,11 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   //User? user = widget._user;
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Bem vindo, ${widget._user.name}", style: TextStyle(fontSize: 20),), backgroundColor: Colors.blueGrey,),
+      appBar: AppBar(title: Text("Bem vindo, ${widget._user.toMap()["name"]}", style: TextStyle(fontSize: 20),), backgroundColor: Colors.blueGrey,),
       body: Center(
         child: Column(
           children: [
