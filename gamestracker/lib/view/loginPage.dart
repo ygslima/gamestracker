@@ -13,7 +13,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   TextEditingController userController = TextEditingController();
   TextEditingController passwController = TextEditingController();
-  String mensagem = "default";
+  Text mensagem = Text("");
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             children: [
               Text("LOGIN"),
+              Divider(height: 20, thickness: 10, color: Colors.transparent,),
               TextField(
                 controller: userController,
                 onChanged: (value) {
@@ -32,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 decoration: InputDecoration(border: OutlineInputBorder(), labelText: "Usuario"),
               ),
-              Divider(height: 10, thickness: 10, color: Colors.transparent,),
+              Divider(height: 20, thickness: 10, color: Colors.transparent,),
               TextField(
                 controller: passwController,
                 onChanged: (value) {
@@ -42,11 +43,13 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
               ),
               Divider(thickness: 10, height: 10, color: Colors.transparent,),
+              mensagem,
+              Divider(thickness: 10, height: 10, color: Colors.transparent,),
 
               //LOGIN BUTTON
               TextButton(
                 onPressed: () async{
-                  String result = await TelaController.loginAuth(context, userController.text, passwController.text);
+                  Text result = await TelaController.loginAuth(context, userController.text, passwController.text);
                   
                   setState(() {
                     mensagem = result;
@@ -60,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
               //SIGNIN BUTTON
               TextButton(
                 onPressed: () async{
-                  String result = await TelaController.registerUser(userController.text, passwController.text);
+                  Text result = await TelaController.registerUser(userController.text, passwController.text);
 
                   setState(() {
                     mensagem = result;
@@ -71,7 +74,19 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextButton.styleFrom(backgroundColor: Colors.green)
               ),
               Divider(thickness: 10, height: 10, color: Colors.transparent,),
-              Text(mensagem)
+
+              //GUEST BUTTON  
+              TextButton(
+                onPressed: () {
+                  Text result = TelaController.guestLogin(context);
+                  setState(() {
+                    mensagem = result;
+                  });
+                },
+                child: Text("Entrar sem Login", style: TextStyle(color: Colors.black),),
+                style: TextButton.styleFrom(backgroundColor: Colors.green),
+              ),
+              
               
             ],
 
