@@ -1,6 +1,7 @@
 import 'dart:io' as io;
 
 import 'package:flutter/material.dart';
+import 'package:gamestracker/model/gameGenre.dart';
 import 'package:gamestracker/model/genre.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -15,13 +16,15 @@ class TelaController{
 
   static final String userTableName = "users";
   static final String gameTableName = "game";
+  static final String genreTableName = "genre";
+  static final String gameGenreTableName = "game_genre";
 
   static Database? _db;
 
   static Future<Database?> get db async{
     _db ??= await _initDb();
 
-    print("db init!");
+    //print("db init!");
     return _db;
   }
 
@@ -56,9 +59,27 @@ class TelaController{
             FOREIGN KEY(user_id) REFERENCES users(id)
           );
           """;
+          
+          String sql3 = """
+            CREATE TABLE genre(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name VARCHAR NOT NULL
+            );
+            """;
+
+          String sql4 = """
+            CREATE TABLE game_genre(
+              game_id INTEGER NOT NULL,
+              genre_id INTEGER NOT NULL,
+              FOREIGN KEY(game_id) REFERENCES game(id),
+              FOREIGN KEY(genre_id) REFERENCES genre(id)
+            );
+          """;
 
           await db.execute(sql1);
           await db.execute(sql2);
+          await db.execute(sql3);
+          await db.execute(sql4);
         }
       )
     );
@@ -100,11 +121,7 @@ class TelaController{
   static Future<void> deleteDatabase() async {
     final io.Directory appDocumentsDir = await getApplicationDocumentsDirectory();
     String path = p.join(appDocumentsDir.path, "databases", "app.db");
-  
-    // Delete the database file
     await io.File(path).delete();
-
-    // Ensure _db is null so that _initDb() will recreate it
     _db = null;
   }
 
@@ -121,7 +138,7 @@ class TelaController{
       Map<String, dynamic> map = usr.toMap();
       //aqui ele associa a o username ao objeto da classe usuario, que e passada como parametro
       if(map["password"]==passw){
-        print("Login realizado!");
+        print("Login realizado! Usuario: $username");
         Navigator.pushNamed(context, MainPage.routeName, arguments: usr);
         return Text("", style: TextStyle(color: Colors.green),);
       }
@@ -137,11 +154,11 @@ class TelaController{
   }
 
   static Text guestLogin(BuildContext context){
-    //deleteDatabase();
+    deleteDatabase();
     User? usr = null;
     Navigator.pushNamed(context, MainPage.routeName, arguments: usr);
     print("Logando como convidado");
-    return Text("Logando como Convidado", style: TextStyle(color: Colors.green),);
+    return Text("");
   }
 
   static Future<Text> registerUser(String username, String passw) async{
@@ -194,18 +211,94 @@ class TelaController{
 
   static Future<int> saveNewGame(String name, String strDate, int userId, String description, String genre) async{
     var database = await db;
+    int falha = 0;
     if(await getGameByName(name) == null){
-      print("jogo n existe");
+      print("criando novo jogo");
       Game game = Game(name, strDate, userId, description);
       await database!.insert(gameTableName, game.toMap());
-      return 0;
     }
+    else{
+      falha = 1;
+    }
+    if(await getGenreByName(genre) == null){
+      print("criando novo genre");
+      Genre genero = Genre(genre);
+      await database!.insert(genreTableName, genero.toMap());
+      Game? joj = await getGameByName(name);
+      Genre? gen = await getGenreByName(genre);
+      GameGenre gameGenre = GameGenre(joj!.toMap()["id"], gen!.toMap()["id"]);
+      await database.insert(gameGenreTableName, gameGenre.toMap());
+    }
+    else{
+      falha = 2;
+    }
+    
     print("jogo existe");
-    return 1;
+    return falha;
+  }
+
+
+  // >>>CONTROLES DE GENRE <<<
+
+  static Future<Genre?> getGenreByName(String name) async{
+    var database = await db;
+    List<Map<String, dynamic>> maps = await database!.query(
+      "genre",
+      where: "name = ?",
+      whereArgs: [name]
+    );
+    print(maps);
+    if(maps.isNotEmpty){
+      return Genre.fromMap(maps.first);
+    }
+    else{
+      return null;
+    }
   }
 
 
 
+  // >>> CONTROLES DE GAMEGENRE <<<
+
+  static Future<List<Game>?> getGamesByGenre(String genre) async{
+    var database = await db;
+    List<Map<String, dynamic>> maps = await database!.query(
+      "game_genre",
+      where: "genre_id = ?",
+      whereArgs: [genre]
+    );
+    print(maps);
+    if(maps.isNotEmpty){
+      List<Game> lista = [];
+      for(Map<String, dynamic> map in maps){
+        lista.add(Game.fromMap(map));
+      }
+      return lista;
+    }
+    else{
+      return null;
+    }
+  }
+
+  static Future<List<Genre>?> getGenresByGame(String game) async{
+    var database = await db;
+    List<Map<String, dynamic>> maps = await database!.query(
+      "game_genre",
+      where: "game_id = ?",
+      whereArgs: [game]
+    );
+    print(maps);
+    if(maps.isNotEmpty){
+      List<Genre> lista = [];
+      for(Map<String, dynamic> map in maps){
+        lista.add(Genre.fromMap(map));
+      }
+      return lista;
+    }
+    else{
+      return null;
+    }
+  }
 
   
 }

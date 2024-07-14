@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gamestracker/controller/telaController.dart';
+import 'package:gamestracker/view/gameDetailsPage.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../model/user.dart';
 import '../model/game.dart';
@@ -25,11 +26,11 @@ class _MainPageState extends State<MainPage> {
   //User? user = widget._user;
 
   TextEditingController newGameNameController = TextEditingController();
-  Text newGameNameMessage = Text("-");
   TextEditingController newGameGenreController = TextEditingController();
-  Text newGameGenreMessage = Text("-");
   TextEditingController newGameDateController = TextEditingController();
-  Text newGameDateMessage = Text("-");
+  String newGameNameMessage = "";
+  String newGameGenreMessage = "";
+  String newGameDateMessage = "";
 
   var maskDateFormatter = MaskTextInputFormatter(mask: '##/##/####', filter: { "#": RegExp(r'[0-9]') });
 
@@ -52,95 +53,143 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  List<Text> texts = [];
+  List<Game?> listaGames = [];
 
-  Future<List<Text>> gamesTitleList() async{
-    Future<List<Game?>> futureGames = TelaController.getGames();
-    List<Game?> games = await futureGames;
-    List<Text> nomes = [];
-    for(Game? game in games){
-      if(game!=null){
-        nomes.add(Text(game.toMap()["name"]));
-      }
-    }
-    texts = nomes;
-    return nomes;
-    
+  Future<List<Game?>> gamesList() async{
+    return await TelaController.getGames();
+  }
+
+  void loadGames() async{
+    List<Game?> games = await gamesList();
+    setState(() {
+      listaGames = games;
+    });
   }
   
-
-
-
-
-
   void _addGame(){
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text("Adicionar Jogo"),
-          content: Column(
-            children: [
-              TextField(
-                keyboardType: TextInputType.text,
-                controller: newGameNameController,
-                decoration: InputDecoration(labelText: "Nome do Jogo"),
-              ),
-              Container(child: newGameNameMessage, alignment: Alignment.topLeft,),
-              TextField(
-                keyboardType: TextInputType.number,
-                controller: newGameDateController,
-                decoration: InputDecoration(labelText: "Ano de lancamento", hintText: "DD/MM/AAAA"),
-                inputFormatters: [maskDateFormatter],
-              ),
-              Container(child: newGameDateMessage, alignment: Alignment.topLeft,),
-              TextField(
-                keyboardType: TextInputType.text,
-                controller: newGameGenreController,
-                decoration: InputDecoration(labelText: "Genero"),
-              ),
-              Container(child: newGameGenreMessage, alignment: Alignment.topLeft,),
+        return StatefulBuilder(
+          builder: (context, setState){
 
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: Text("Cancelar"),
-              onPressed: () => Navigator.pop(context),
+          return AlertDialog(
+            title: Text("Adicionar Jogo"),
+            content: Column(
+              children: [
+                TextField(
+                  keyboardType: TextInputType.text,
+                  controller: newGameNameController,
+                  decoration: InputDecoration(labelText: "Nome do Jogo"),
+                ),
+                Container(child: Text(newGameNameMessage, style: TextStyle(color: Colors.red),), alignment: Alignment.topLeft,),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  controller: newGameDateController,
+                  decoration: InputDecoration(labelText: "Ano de lancamento", hintText: "DD/MM/AAAA"),
+                  inputFormatters: [maskDateFormatter],
+                ),
+                Container(child: Text(newGameDateMessage, style: TextStyle(color: Colors.red),), alignment: Alignment.topLeft,),
+                TextField(
+                  keyboardType: TextInputType.text,
+                  controller: newGameGenreController,
+                  decoration: InputDecoration(labelText: "Genero"),
+                ),
+                Container(child: Text(newGameGenreMessage, style: TextStyle(color: Colors.red),), alignment: Alignment.topLeft,),
+
+              ],
             ),
-            TextButton(
-              child: Text("Concluir"),
-              onPressed: ()  async{
-                print("concluir");
-                Future<int> stat = TelaController.saveNewGame(
-                  newGameNameController.text,
-                  newGameDateController.text,
-                  getUser()!["id"],
-                  "ExampleDescription",
-                  newGameGenreController.text
-                );
-                
-                print(stat);
-                if(stat==0){
-                  print(0);
-                  print(newGameDateController.text);
+            actions: [
+              TextButton(
+                child: Text("Cancelar"),
+                onPressed: () {
                   Navigator.pop(context);
-
-                }
-                else{
-                  print("asdfa");
-                  newGameDateMessage = Text("Data invalida", style: TextStyle(color: Colors.red),);
-                }
-              },
-            )
-          ],
+                  setState(() {
+                  newGameDateMessage = "";
+                  newGameNameMessage = "";
+                  newGameDateController.clear();
+                  newGameNameController.clear();
+                  newGameGenreController.clear();
+                    
+                  });
+                },
+              ),
+              TextButton(
+                child: Text("Concluir"),
+                onPressed: ()  async{
+                  bool isValid = true;
+                  setState(() {
+                    if(newGameNameController.text ==""){
+                      print("Nome do jogo invalido");
+                        newGameNameMessage = "Nome Invalido";
+                      isValid = false;
+                    }
+                    else{
+                      newGameNameMessage = "";
+                    }
+                    if(newGameDateController.text.length < 10){
+                      print("Data invalida");
+                      print("LEN : ${newGameDateController.text.length}");
+                        newGameDateMessage = "Data invalida";
+                      isValid = false;
+                    }
+                    else{
+                      newGameDateMessage = "";
+                    }  
+                  });
+                  if(isValid){
+                    print("concluir");
+                    int stat = await TelaController.saveNewGame(
+                      newGameNameController.text,
+                      newGameDateController.text,
+                      getUser()!["id"],
+                      "ExampleDescription",
+                      newGameGenreController.text
+                    );
+                    print(stat);
+                    setState(() {
+                      if(stat==0){
+                        print("stat: $stat");
+                        print(newGameDateController.text);
+                        loadGames();
+                        Navigator.pop(context);
+                        newGameDateMessage = "";
+                        newGameNameMessage = "";
+                        newGameDateController.clear();
+                        newGameNameController.clear();
+                        newGameGenreController.clear();
+                      }
+                      else{
+                        print("Jogo ja existente erro");
+                        newGameNameMessage = "Jogo ja existente";
+                      }  
+                    });
+                  }
+                },
+              )
+            ],
+          );
+          }
         );
       },
     );
   }
 
+  void goToGameDetails(Game game){
+    print("Indo para detalhes de ${game.name}");
+    Navigator.pushNamed(context, GameDetailsPage.routeName, arguments: game);
 
+  }
+
+
+//-------------------------------------------------------------------------------------------------------
   @override
+  void initState(){
+    super.initState();
+    loadGames();
+    print("gerando lista de jogos");
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -162,9 +211,21 @@ class _MainPageState extends State<MainPage> {
 
             Divider(height: 10, thickness: 10,),
             Expanded(
-              child: ListView(
-                children: texts,
-              )
+              child: ListView.builder(
+                itemCount: listaGames.length,
+                itemBuilder: (context, index) {
+                  final game = listaGames[index];
+
+                  if(true){
+                    return ListTile(
+                      title: Text(game!.name),
+                      subtitle: Text("subtitle qualquer"),
+                      onTap: () => goToGameDetails(game),
+                    );
+                  }
+                  
+                }
+              ),
             ),
 
             
@@ -175,6 +236,7 @@ class _MainPageState extends State<MainPage> {
         onPressed: () {
           if(getUser() != null){
             _addGame();
+
           }
           else{
             final snackBar = SnackBar(

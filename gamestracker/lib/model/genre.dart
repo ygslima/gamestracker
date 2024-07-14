@@ -1,16 +1,23 @@
-import 'gameGenre.dart';
-
 class Genre{
-  String _name;
-  List<GameGenre> _gameGenres = [];
+  int? _id;
+  String _name = "";
+  
 
   Genre(this._name);
 
-  String get name => _name;
-  List<GameGenre> get gameGenres => _gameGenres;
-
-  void addGame(GameGenre gameGenre){
-    this._gameGenres.add(gameGenre);
+  Genre.fromMap(Map<String, dynamic> map){
+    this._id = map["id"];
+    this._name = map["name"];
   }
+
+  Map<String, dynamic> toMap(){
+    Map<String, dynamic> map = {
+      "id": this._id,
+      "name": this._name
+    };
+    return map;
+  }
+
+  String get name => _name;
 
 }

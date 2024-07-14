@@ -1,12 +1,9 @@
-import 'package:gamestracker/model/gameGenre.dart';
-
 class Game{
   int? _id;
   int _userId = 0;
   String _name = "";
-  String _description = "";
   String _date = "";
-  List<GameGenre> _gameGenres = [];
+  String _description = "";
 
 
   Game(this._name, this._date, this._userId, this._description);
@@ -31,10 +28,4 @@ class Game{
   }
 
   String get name => _name;
-  List<GameGenre> get gameGenres => _gameGenres;
-
-  void addGenre(GameGenre gameGenre){
-    this._gameGenres.add(gameGenre);
-  }
-
 }
