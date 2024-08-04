@@ -1,6 +1,6 @@
 class Genre{
   int? _id;
-  String _name = "";
+  String? _name;
   
 
   Genre(this._name);
@@ -17,7 +17,5 @@ class Genre{
     };
     return map;
   }
-
-  String get name => _name;
 
 }

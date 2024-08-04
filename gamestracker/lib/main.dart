@@ -5,6 +5,7 @@ import 'view/MainPage.dart';
 import 'model/user.dart';
 import 'view/gameDetailsPage.dart';
 import 'model/game.dart';
+import 'view/recentReviewsPage.dart';
 void main() async{
   runApp(MaterialApp(
     initialRoute: "/",
@@ -17,8 +18,13 @@ void main() async{
         return MaterialPageRoute(builder: (context) => MainPage(user: args));
       }
       if(settings.name == GameDetailsPage.routeName){
-        final args = settings.arguments as Game;
-        return MaterialPageRoute(builder: (context) => GameDetailsPage(game: args));
+        final args = settings.arguments as Map<String, dynamic>;
+        final gam = args["game"] as Game;
+        final usr = args["user"] as User?;
+        return MaterialPageRoute(builder: (context) => GameDetailsPage(game: gam, user: usr,));
+      }
+      if(settings.name == RecentReviewsPage.routeName){
+        return MaterialPageRoute(builder: (context) => RecentReviewsPage());
       }
       return null;
     },
